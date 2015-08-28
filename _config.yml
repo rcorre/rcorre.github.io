@@ -1,0 +1,14 @@
+# Site settings
+title: Ryan's Blog
+email: ryan@rcorre.net
+description: > # this means to ignore newlines until "baseurl:"
+  In which I talk about programming and whatnot.
+baseurl: "" # the subpath of your site, e.g. /blog/
+url: "http://blog.rcorre.net" # the base hostname & protocol for your site
+github_username: rcorre
+
+# Build settings
+markdown: kramdown
+
+# exclusions
+exclude: [vendor]
