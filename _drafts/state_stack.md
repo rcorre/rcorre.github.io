@@ -92,7 +92,7 @@ However, since the `StateStack` only allows a single active state at once, we
 can actually track this with a single flag in the `StateStack`.
 Let's take a look at a stripped-down implementation:
 
-```d
+{% highlight d %}
 struct StateStack(T) {
   private {
     bool        _currentStateEntered;
@@ -145,7 +145,7 @@ struct StateStack(T) {
     top.run(params);
   }
 }
-```
+{% endhighlight %}
 
 It may not be rocket science, but it is quite a bit more complicated than I
 imagined when I first set out to implement this.
@@ -154,13 +154,13 @@ Much of the complexity comes from the fact that it is valid (and useful) for a
 state to push() and pop() states during its `enter`.
 It would be lovely to implement `StateStack.run` like so:
 
-```d
+{% highlight d %}
 if (!_currentStateEntered) {
   _currentStateEntered = true;
   top.enter(params);
 }
 top.run(params);
-```
+{% endhighlight %}
 
 However, this is too naive; after we call `top.enter`, `top` may be a completely
 different state!
@@ -215,7 +215,7 @@ Here's an excerpt of code from Terra Arcana that handles the initiation of an
 attack action (note that `b` stands for 'battle', I guess I was feeling
 particularly lazy with my variable names at the time):
 
-```d
+{% highlight d %}
 b.states.popState();
 
 foreach(unit ; unitsAffected) {
@@ -229,7 +229,7 @@ foreach(unit ; unitsAffected) {
     b.states.pushState(new ApplyEffect(_action, unit));
   }
 }
-```
+{% endhighlight %}
 
 Remember that we are dealing with a stack, so states pushed later end up at the
 top (`ApplyEffect` happens before `CheckUnitDestruction`).
@@ -269,7 +269,7 @@ each round.
 
 Here's the logic that sets up a new round:
 
-```d
+{% highlight d %}
 battle.states.push(
     new BattleIntroduction(cannonsTitle, MusicLevel.moderate, battle.game),
     new PlaceTurrets(battle),
@@ -283,7 +283,7 @@ battle.states.push(
     new StatsSummary(battle, _currentRound));
 
 ++_currentRound;
-```
+{% endhighlight %}
 
 Because all of the states can be stacked up at once within a single function,
 none of the states have to be aware what state comes next.
@@ -304,7 +304,7 @@ This is one of those useful extensions to `StateStack` I mentioned earlier.
 
 My current implementation actually defines `push` like so:
 
-```d
+{% highlight d %}
 void push(State!T[] states ...) {
   if (_currentStateEntered) {
     top.exit(_params);
@@ -314,7 +314,7 @@ void push(State!T[] states ...) {
   foreach_reverse(state ; states) {
     _stack.insertFront(state);
   }
-```
+{% endhighlight %}
 
 Admittedly, this could be slightly non-obvious compared to pushing states one at
 a time in reverse order, but I find it much easier to visualize the flow of
@@ -324,9 +324,9 @@ logic when pushing multiple states this way.
 The above code resides in the `enter` method of `StartRound`, which is of type
 `State!Battle`. So, `StartRound` is a 'Battle State', but what is a `Battle`?
 
-```d
+{% highlight d %}
 class Battle : State!Game { ... }
-```
+{% endhighlight %}
 
 This provides a nice way of dividing you game logic into tiers.
 `Game` has very general states like `TitleScreen` and `Battle`, and each of
@@ -348,42 +348,41 @@ which they occur, which I find easier to read.
 This one is a gimme. It is quite common for one state to simply pop itself and
 push a single other state. Replace is a convenience wrapper to do just that:
 
-```d
+{% highlight d %}
 void replace(State!T state) {
   if (!_stack.empty) pop();
   push(state);
 }
-```
+{% endhighlight %}
 
 ## Context, Please!
 Sometimes, a state might rely on information that the entity itself doesn't have
 access to. Consider the following:
 
-```d
+{% highlight d %}
 class SeekPlayer : State!Enemy {
   void run(Enemy self) {
     // what is playerPos?
     self.moveToward(playerPos);
   }
 }
-```
+{% endhighlight %}
 
 The state operates on an `Enemy`, but doesn't have all of the information it
 needs to behave intelligently. We could place this information on the `Enemy`
 itself, but another option is to allow a `State` to take multiple arguments.
 
-```d
+{% highlight d %}
 interface State(T...)
-struct StateStack(T...)
-```
+{% endhighlight %}
 
 Thanks to D's tuple mechanics, this is actually the only change required!
 Everything else stays the same, but we can now define states to operate on
 multiple args:
 
-```d
+{% highlight d %}
 struct EnemyContext {
-  Vector2f playerPosition;
+  Vector2f playerPos;
   // other useful info for updating an enemy goes here
 }
 
@@ -392,7 +391,7 @@ class SeekPlayer : State!(Enemy, EnemyContext) {
     self.moveTowards(context.playerPos);
   }
 }
-```
+{% endhighlight %}
 
 # Different Approaches
 The approach I just described has worked pretty well for me at a macro scale
@@ -409,7 +408,7 @@ Here are a few approaches that have been bouncing around in my head:
 The nice bit about using inheritance is that every type of `State` can maintain
 its own set of data. Consider some states from 'Damage Control':
 
-```d
+{% highlight d %}
 class StartRound : State!Battle {
   private int _currentRound;
   // ...
@@ -425,7 +424,7 @@ abstract class Fight : TimedPhase {
   }
   // ...
 }
-```
+{% endhighlight %}
 
 At the time of writing these, it made sense to keep these values in their
 respective states -- after all, projectiles are only flying around in the
@@ -439,13 +438,13 @@ If we assume that the only context a `State` needs is that which is passed to it
 `enter`/`exit`/`run` methods, we can reduce a `State` to a bundle of function
 pointers:
 
-```d
+{% highlight d %}
 struct State(T...) { void function(T) enter, exit, run; }
-```
+{% endhighlight %}
 
 Now a state is defined by sticking a few function pointers to a struct:
 
-```d
+{% highlight d %}
 auto seekPlayer() {
   State!Enemy state;
   state.enter = (self, context) { }
@@ -455,7 +454,7 @@ auto seekPlayer() {
 }
 
 enemy.states.push(seekPlayer());
-```
+{% endhighlight %}
 The nice bit about this approach is that it fits nicely into more minimal
 languages like C.
 
@@ -467,7 +466,7 @@ Oh, wait. We don't! `StateStack` can remain exactly the same.
 It will fail if we leave a null function pointer, but we can avoid that with
 some do-nothing defaults:
 
-```d
+{% highlight d %}
 auto doNothing(T...)(T) { }
 
 struct State(T...) {
@@ -475,12 +474,12 @@ struct State(T...) {
   void function(T) exit  = &doNothing!T;
   void function(T) run   = &doNothing!T;
 }
-```
+{% endhighlight %}
 
 We could also come to a compromise between the class and struct approaches by
 using delegates:
 
-```d
+{% highlight d %}
 struct State(T...) { void delegate(T) enter, exit, run; }
 
 auto moveToPosition(Vector2f pos) {
@@ -492,4 +491,4 @@ auto moveToPosition(Vector2f pos) {
 }
 
 enemy.states.push(moveToPosition(Vector2f(120, 240)));
-```
+{% endhighlight %}
