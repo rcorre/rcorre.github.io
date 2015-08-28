@@ -14,7 +14,7 @@ paginate: 10
 
 # Build settings
 markdown: kramdown
-highlighter: pygments:
+highlighter: pygments
 
 # exclusions
 exclude: ['README.md', 'Gemfile.lock', 'Gemfile', 'Rakefile', 'vendor']
