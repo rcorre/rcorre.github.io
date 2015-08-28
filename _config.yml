@@ -1,4 +1,5 @@
 # Site settings
+name: Ryan's Blog
 title: Ryan's Blog
 email: ryan@rcorre.net
 description: > # this means to ignore newlines until "baseurl:"
@@ -7,8 +8,13 @@ baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://blog.rcorre.net" # the base hostname & protocol for your site
 github_username: rcorre
 
+
+permalink: /:year/:month/:day/:title/
+paginate: 10
+
 # Build settings
 markdown: kramdown
+highlighter: pygments:
 
 # exclusions
-exclude: [vendor]
+exclude: ['README.md', 'Gemfile.lock', 'Gemfile', 'Rakefile', 'vendor']
