@@ -5,7 +5,7 @@ date:   2015-08-28 13:00:03
 categories: coding gamedev D
 ---
 
-# Intro
+## Intro
 My last two game-development projects were turn-based strategy games.
 Both ended up abandoned long before completion, but one particular technique
 used in both stood out as being extremely useful: the `StateStack`.
@@ -27,7 +27,7 @@ implemented differently (better?).
 If you find this kind of thing interesting, I highly recommend the book
 'Programming Game AI by Example', which inspired many of my ideas on this topic.
 
-# What is a State?
+## What is a State?
 A state is a structure that dictates the behavior of some entity in your game.
 The meaning of 'entity' here is extremely broad.
 It could be anything from a single enemy to the entire game itself.
@@ -64,7 +64,7 @@ Note that `enter` and `exit` are _not_ equivalent to a constructor and
 destructor; we will see later that a single state may `enter` and `exit`
 multiple times during its life.
 
-# What is a StateStack?
+## What is a StateStack?
 The state structure mentioned before isn't terribly ingenious on its own -- the
 `StateStack` is what makes everything tick.
 
@@ -172,7 +172,7 @@ While I find this much less useful, I decided to support it just to avoid nasty
 surprises. To support this, we need to cache the subject that is passed into
 `run` so it can be used by `pop`.
 
-# Dissolving Complex Logic Flows
+## Dissolving Complex Logic Flows
 In my previous game [Terra Arcana](https://github.com/rcorre/terra-arcana), the
 `StateStack` proved invaluable in making the flow of combat manageable.
 
@@ -257,7 +257,7 @@ with 3 `ApplyEffects` and a `CheckUnitDestruction`. The states nicely
 encapsulate specific chunks of game logic, so we get to reuse the same states in
 `PerformAction` and `PerformCounter`.
 
-# Isolation
+## Isolation
 Another advantage of states is the ability to isolate chunks of game logic from
 one another. My [current project](https://github.com/rcorre/damage-control)
 is a game reminiscent of the SNES title Rampart.
@@ -320,7 +320,7 @@ Admittedly, this could be slightly non-obvious compared to pushing states one at
 a time in reverse order, but I find it much easier to visualize the flow of
 logic when pushing multiple states this way.
 
-# Hierarchy
+## Hierarchy
 The above code resides in the `enter` method of `StartRound`, which is of type
 `State!Battle`. So, `StartRound` is a 'Battle State', but what is a `Battle`?
 
@@ -334,17 +334,17 @@ those states has a more specific set of states.
 Within the `Battle` state, each enemy has its own `StateStack` to manage things
 like hovering, circling targets, shooting, and crashing after being hit.
 
-# Improvements
+## Improvements
 As I've worked with this structure over the course of 3 games (admittedly, 2
 abandoned and 1 in-progress), I've gradually refined and added functionality to
 the `State Stack`. Here are a few useful additions:
 
-## Push(...)
+### Push(...)
 As mentioned earlier, I modified push to take multiple arguments which are
 pushed in reverse order. This allows the caller to list states in the order in
 which they occur, which I find easier to read.
 
-## Replace
+### Replace
 This one is a gimme. It is quite common for one state to simply pop itself and
 push a single other state. Replace is a convenience wrapper to do just that:
 
@@ -355,7 +355,7 @@ void replace(State!T state) {
 }
 {% endhighlight %}
 
-## Context, Please!
+### Context, Please!
 Sometimes, a state might rely on information that the entity itself doesn't have
 access to. Consider the following:
 
@@ -393,7 +393,7 @@ class SeekPlayer : State!(Enemy, EnemyContext) {
 }
 {% endhighlight %}
 
-# Different Approaches
+## Different Approaches
 The approach I just described has worked pretty well for me at a macro scale
 (describing the flow of logic through various game states and sub-states).
 
@@ -404,7 +404,7 @@ for every state?
 
 Here are a few approaches that have been bouncing around in my head:
 
-## The minimalist
+### The minimalist
 The nice bit about using inheritance is that every type of `State` can maintain
 its own set of data. Consider some states from 'Damage Control':
 
