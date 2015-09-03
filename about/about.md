@@ -6,13 +6,14 @@ permalink: /about/
 
 # About this site
 
-So, you've somehow found your way to my website, no doubt seeking enlightenment.
+Hi!
 
-Man are you in for a disappointment!
+I'm not sure how you got here, but thanks for visiting.
 
-But hey, since you're already here, why not check out some of my
-[half-finished-projects]() or [rambling posts](posts)?
-Who knows, maybe you can find something of interest.
+You should take a look at some of my
+[half-finished-projects](/projects)
+or
+[rambling posts](/archives).
 
 
 # About Me
@@ -31,13 +32,16 @@ language.
 
 # Things I Like:
 
-- [D](http://dlang.org/), a language that boasts compile-time metaprogramming
+- [D](http://dlang.org/), a language boasting compile-time metaprogramming
   that won't melt your brain, robust range-based functional programming, and
   whole host of other cool things.
 
 - [Allegro](http://liballeg.org/), a tragically under-appreciated
   game programming library that 'just works' for the functionality I need and
   stays out of my way the rest of the time.
+
+- [DAllegro](https://github.com/SiegeLord/DAllegro5), combining both of the
+  above.
 
 - [aseprite](http://www.aseprite.org/) for pixel art.
 
@@ -53,4 +57,4 @@ language.
 
 - [Awesome](http://awesome.naquadah.org/), to make my desktop, well, awesome.
 
-- [st](http://st.suckless.org/), what's a programmer without a good terminal?
+- [st](http://st.suckless.org/), a practical lightweight terminal.

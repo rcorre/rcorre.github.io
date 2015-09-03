@@ -10,7 +10,8 @@ permalink: /projects/
 
 **Source** : [https://github.com/rcorre/damage_control]()
 
-Damage control is a game reminiscent of one of my old favorite titles: Rampart.
+Damage control is a game reminiscent of one of my old favorite titles:
+[Rampart](https://en.wikipedia.org/wiki/Rampart_(video_game)).
 
 The gameplay involves two players squaring off, each destroying the others walls
 and then trying frantically to repair their own.
