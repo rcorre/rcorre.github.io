@@ -109,14 +109,15 @@ h3 {
 
 /*** Structure ***/
 #page {
-	width: 500px;
+	width: 700px;
 	margin: 0 auto;
 	position: relative;
 }
 
 #header {
-	width: 500px;
-	margin: 40px auto 50px auto;
+	width: 400px;
+	margin: 20px auto 40px auto;
+	text-align: center;
 }
 #header h1 {
 	font-size: 32px;
@@ -125,9 +126,12 @@ h3 {
 #header h1 a {
 	border: none;
 }
+#header nav {
+	border-bottom: 2px solid #073642;
+}
 
 #footer {
-	width: 500px;
+	width: 700px;
 	margin: 50px auto 20px auto;
 	padding-top: 10px;
 	font-size: 0.85em;
@@ -135,31 +139,9 @@ h3 {
 }
 
 #content {
-	width: 500px;
+	width: 700px;
 	margin: 0 auto;
 }
-
-#sidebar {
-	position: absolute;
-	text-align: right;
-	width: 160px;
-	top: 0;
-	left: -240px;
-}
-
-#sidebar li {
-	list-style: none;
-	margin: 2px 0;
-}
-
-#sidebar a {
-	border: none;
-	font-family: "Helvetica Neue", "Helvetica", serif;
-	font-size: 1.2em;
-	padding: 2px 4px;
-}
-
-
 
 /*** Posts ***/
 article {
@@ -230,20 +212,6 @@ img.center {
 		padding-left: 10px;
 		padding-right: 10px;
 	}
-
-	#sidebar {
-		position: relative;
-		text-align: left;
-		width: 100%;
-		left: 0;
-		margin: 10px 10px 20px 10px;
-	}
-
-	#sidebar nav select.mnav {
-		display: block;
-		margin-bottom: 15px;
-	}
-
 }
 
 
