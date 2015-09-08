@@ -30,22 +30,24 @@ This leverages my project [dtiled](https://github.com/rcorre/dtiled), which is a
 general-purpose library for creating tile-mapped games in the D programming
 language.
 
+Check out my open source work on [Github](https://github.com/rcorre) or
+Creative-Commons art on [Open Game Art](http://opengameart.org/users/rcorre).
+
 # Things I Like:
 
 - [D](http://dlang.org/), a language boasting compile-time metaprogramming
   that won't melt your brain, robust range-based functional programming, and
   whole host of other cool things.
 
-- [Allegro](http://liballeg.org/), a tragically under-appreciated
-  game programming library that 'just works' for the functionality I need and
-  stays out of my way the rest of the time.
+- [Allegro](http://liballeg.org/), a game programming library that 'just works'
+  for the functionality I need and stays out of my way the rest of the time.
 
 - [DAllegro](https://github.com/SiegeLord/DAllegro5), combining both of the
   above.
 
 - [aseprite](http://www.aseprite.org/) for pixel art.
 
-- [LMMS](http://www.aseprite.org/) to create music.
+- [LMMS](https://lmms.io/) to create music.
 
 - [Inkscape](https://inkscape.org/) to create vector graphics.
 
