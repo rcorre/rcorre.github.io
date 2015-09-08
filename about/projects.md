@@ -8,7 +8,7 @@ permalink: /projects/
 
 **State**  : Pre-Alpha (Alpha coming soon!)
 
-**Source** : [https://github.com/rcorre/damage_control]()
+**Source** : [On Github](https://github.com/rcorre/damage_control)
 
 Damage control is a game reminiscent of one of my old favorite titles:
 [Rampart](https://en.wikipedia.org/wiki/Rampart_(video_game)).
@@ -28,7 +28,7 @@ The game is written in [D](http://dlang.org/) and uses the
 
 **State**  : v0.2
 
-**Source** : [https://github.com/rcorre/dtiled]()
+**Source** : [On Github](https://github.com/rcorre/dtiled)
 
 DTiled is a library for creating tile-mapped games in D.
 
@@ -51,7 +51,7 @@ version of the library once the game is finished.
 
 **State**  : Beta (Abandoned)
 
-**Source** : [https://github.com/rcorre/terra-arcana]()
+**Source** : [On Github](https://github.com/rcorre/terra-arcana)
 
 Terra Arcana is a sci-fi turn-based strategy game that I worked on for a good
 portion of 2014.
