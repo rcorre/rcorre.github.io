@@ -6,7 +6,7 @@ permalink: /projects/
 
 # Damage Control
 
-**State**  : Pre-Alpha (Alpha coming soon!)
+**State**  : v0.0 Alpha
 
 **Source** : [On Github](https://github.com/rcorre/damage_control)
 
@@ -26,7 +26,7 @@ The game is written in [D](http://dlang.org/) and uses the
 
 # DTiled
 
-**State**  : v0.2
+**State**  : v0.3.3
 
 **Source** : [On Github](https://github.com/rcorre/dtiled)
 
