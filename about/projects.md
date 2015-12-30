@@ -47,6 +47,26 @@ support is planned.
 I am currently using DTiled in Damage Control, and will try to release a stable
 version of the library once the game is finished.
 
+# Enumap
+
+**State**  : v0.4.0
+
+**Source** : [On Github](https://github.com/rcorre/enumap)
+
+A simple value type that maps each element of an enum to a single value. It
+is similar to an associative array, but uses a static array as a backing store
+and provides some nice syntactic sugar.
+
+# Superstruct
+
+**State**  : v0.2.0
+
+**Source** : [On Github](https://github.com/rcorre/superstruct)
+
+Superstruct is a struct that behaves like a class.
+It its similar to a Variant in that it can store one of several value types, but
+it exposes an interface based on the common members of the source types.
+
 # Terra Arcana
 
 **State**  : Beta (Abandoned)
