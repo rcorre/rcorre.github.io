@@ -1,9 +1,6 @@
 # Modelling an RPG in D
 For the past year, I've done the majority of my personal coding in a language
-called D. 
-
-Its a really cool languagem, and it pains me a bit to get blank looks whenever I
-mention it.
+called [D](http://dlang.org/). 
 
 This post will explore some of the cool features of D in the context of creating
 an RPG.
@@ -48,82 +45,70 @@ So far, pretty typical -- this looks just like it would in C.
 However, it would be nicer if we could have each category
 (attributes, skills, resistances) represented as a single group of values.
 
-This could be easily achieved with an 'associative array', which you may know as
-a 'Hash Map' or 'Dictionary' in other languages.
-
-In D, an associative array ('AA for short) is a built-in type, declared with the
-syntax `ValueType[KeyType]`.
+First, let's define some `enum`s:
 
 ```d
 enum Attribute { strength, dexterity, constitution, intellect, wisdom, charisma }
-enum Skill     { stealth, perception, diplomacy }
-enum Element   { physical, fire, water, air, earth }
+enum Skill { stealth, perception, diplomacy }
+enum Element { physical, fire, water, air, earth }
+```
 
+Now we want to map each of these enum 
+One option is an [Associative Array](http://dlang.org/spec/hash-map.html), which
+would look like this:
+
+```d
 struct Character {
   int[Attribute] attributes;
-  int[Skill]     skills;
-  int[Element]   resistances;
+  int[Skill] attributes;
+  int[Element] attributes;
 }
 ```
 
-Ah, that looks much more organized!
+However, associative arrays are heap allocated and don't have a default value
+for each key. It seems like overkill for storing a small bundle of values.
 
-Now we can manipulate the character's stats like so:
-
-```d
-hero.attributes[Attribute.dexterity] = 2;
-if (hero.attributes[Attribute.dexterity] < 4) hero.tripOverOwnFeet();
-```
-
-Unfortunately, the above will fail if we explicitly set a value for each
-possible key. The is less than ideal -- it would be nice to have a default value
-for each possible key.
-
-AA's are a useful tool, but they aren't quite tailored to our situation here.
-We don't need to map some arbitrary set of keys; we know exactly how many keys
-we have and want exactly one value for each key.
-
-Lets look at how we could use an array for this:
+Another option is a 
+[static array](http://dlang.org/spec/arrays.html#static-arrays). Static arrays
+are stack allocated value types and will contain exactly the number of values
+that we need.
 
 ```d
 struct Character {
   int[6] attributes;
-  // ...
+  int[3] skills;
+  int[5] resistances;
 }
 ```
 
-The syntax `int[6]` declares a **static array** of size 6 (one entry for each
-attribute).
+Our enum values are backed by `int`s, so we can use them directly as indexes
+like so:
 
-In D, static arrays are _value types_ meaning that no heap allocation is
-involved in their creation. Furthermore, we are now guaranteed to have a
-default value (0) for each Attribute.
+```d
+if (hero.attributes[Attribute.dexterity] < 4) hero.tripOverOwnFeet();
+```
 
-Unfortunately, only convention enforces that we use an `Attribute` as a key:
+This is more efficient for our needs, but nothing enforces using enums as keys.
+The following is just as valid:
 
 ```d
 if (hero.attributes[2] < 4) hero.tripOverOwnFeet();
 ```
 
-What we'd really like is a type specialized for mapping each entry in an enum to
-a single value. Such a type often referred to as an `EnumSet`, and is included
-in the standard library of some languages such as 
-([Java](TODO) and [Rust](TODO)).
+If we acidentally gave an out of bounds index, the compiler wouldn't catch it
+and we'd get a runtime error.
 
-The bad news is that Phobos (D's standard library) provides no such type.
-The good news is that we're a few lines of code away from something just as
-good, and a few more lines away from something better.
+Ideally, we want the efficiency of the static array with the syntax of the
+associative array. Fortunately, the power of D allows us to achieve this with a
+few lines of code, and something even cooler with a few more. Let's call it an
+`Enumap`, as it maps enum members to values.
 
-# The EnumSet
-
-Here's a simple definition that supports getting and setting values using enum
-members as keys. There are a number of things I'm omitting here, some of which I
-will discuss later:
+# The Enumap
 
 ```d
-import std.traits : EnumMembers;
+import std.traits;
 
-struct EnumSet(K, V) {
+struct Enumap(K, V) {
   private enum N = EnumMembers!K.length;
   private V[N] _store;
 
@@ -132,46 +117,51 @@ struct EnumSet(K, V) {
 }
 ```
 
-Let's break that down line-by-line:
+Here's a line-by-line breakdown:
 
-1: `import std.traits : EnumMembers;`
+```d
+import std.traits;
+```
 
-Here we import something we will need later standard library.
-We could have said `import std.traits` to import the whole module,
-but instead we used a 'scoped import' as we just need `EnumMembers`.
+We need access to `std.traits.EnumMembers`, a standard-library function that
+returns (at compile-time!) the members of an enum.
 
-3: `struct EnumSet(K, V) {`
+```d
+struct Enumap(K, V)
+```
+
 Here, we declare a templated struct. In many other languages,
-this would look like `EnumSet<K, V>`.
+this would look like `Enumap<K, V>`.
 K will be our key type (the enum) and V will be the value.
 
 K and V are known as 'compile-time parameters'. In this case, they are simply
-used to create a generic type, but in D such parameters can be used for a much
+used to create a generic type, but in D such parameters can be used for much
 more than just generic types, as we will see later.
 
-4: `private enum N = EnumMembers!K.length;`
-5: `private V[N] _store;`
+```d
+private enum N = EnumMembers!K.length;`
+private V[N] _store;`
+```
 
-Here we leverage `std.traits.EnumMembers`, (which we imported earlier) to
-determine how many entries are in the provided enum. We use this to declare a 
-static array capable of holding exactly `N` `V`s (valuesvalues)
+Here we leverage `EnumMembers`,  to determine how many entries are in the
+provided enum. We use this to declare a static array capable of holding exactly
+`N` `V`s.
 
 6: `auto opIndex(K key)                { return _store[key]; }`
 7: `auto opIndexAssign(T value, K key) { return _store[key] = value; }`
 
-opIndex is a special method that allows us to provided a custom implementation
-of the indexing (`[]`) operator. If a user of the `EnumSet` calls
-`skills[Skill.stealth]`, it is translated to `sklls.opIndex(Skill.stealth)`.
-Similarly, the assignment `skills[Skill.stealth] = 5` is translated to 
- `sklls.opIndexAssign(Skill.stealth, 5)`
+`opIndex` is a special method that allows us to provide a custom implementation
+of the indexing (`[]`) operator. The call `skills[Skill.stealth]` is translated
+to `sklls.opIndex(Skill.stealth)`, while the assignment `skills[Skill.stealth] =
+5` is translated to `sklls.opIndexAssign(Skill.stealth, 5)`.
 
-Now lets use that in our character struct:
+Lets use that in our character struct:
 
 ```d
 struct Character {
-  EnumSet!(Attribute, int) attributes;
-  EnumSet!(Skill    , int) skills;
-  EnumSet!(Element  , int) resistances;
+  Enumap!(Attribute, int) attributes;
+  Enumap!(Skill    , int) skills;
+  Enumap!(Element  , int) resistances;
 }
 ```
 
@@ -186,15 +176,14 @@ managed-memory allocation.
 
 Clever, yes?
 
-Wait, never mind.
-That wasn't the clever bit.
+Wait, that wasn't the clever bit.
 **This** is the clever bit:
 
 ```d
-import std.conv : to;
+import std.conv;
 //...
 
-struct EnumSet(K, V) {
+struct Enumap(K, V) {
   //...
   auto opDispatch(string s)()      { return this[s.to!K]; }
   auto opDispatch(string s)(V val) { return this[s.to!K] = val; }
@@ -202,18 +191,17 @@ struct EnumSet(K, V) {
 ```
 
 ```d
-if (hero.attributes.charisma < 5) hero.makeAnAwkwardJoke();
+if (hero.attributes.charisma < 5) hero.makeAwkwardJoke();
 ```
 
-What I just added was some totally unnecessary, totally awesome syntactic sugar.
-
-I'm leveraging the [opDispatch](TODO) operator to, in a way, overload the `.`
-operator.
+This little bit of magic leverages
+[opDispatch](http://dlang.org/spec/operatoroverloading.html#dispatch) to
+overload the `.` operator and give us some really nice syntactic sugar.
 
 Here's a quick rundown of what happens for `hero.attributes.charisma = 5`:
 
 1. The compiler sees `attributes.charisma`.
-2. It looks for the symbol `charisma` in the type `EnumSet!(Attribute, int)`
+2. It looks for the symbol `charisma` in the type `Enumap!(Attribute, int)`
 3. Failing to find this, it tries `attributes.opDispatch!"charisma"`
 4. That call resolves to `attributes["charisma".to!Attribute]`
 5. And further resolves to `attributes[Attribute.charisma]`
@@ -227,97 +215,69 @@ So, we get the string "charisma", but we what we actually want the enum member
 makes quick work of this; it can, among other things, translate between strings
 and enum names.
 
-# A step further: Resistances
-As your game progesses you decide to add the concept of armor.
-Each piece of armor has a certain set of resistances.
+# A step further: Enumap Arithmetic
 
-A character wears multiple pieces of armor, and their total resistance is the
-sum of the resistance values of their equipment:
+Let's suppose we add items to the game, and each item can provide some stat
+bonuses:
 
 ```d
-struct Armor { EnumSet!(Element, int) resistance; }
-
-enum BodyPart { head, torso, legs, arms }
-
-struct Character {
-  EnumSet!(BodyPart, Armor) armor;
-
-  @property auto resistance() {
-    EnumSet!(Element, int) res;
-
-    foreach(piece ; armor) res = res + piece.resistance;
-
-    return res;
-  }
+struct Item {
+    Enumap!(Attribute, int) bonuses;
 }
 ```
 
-See what I did there? Nobody said `EnumSet` only works for numbers; its pretty
-convenient for mapping each body part to a piece of armor too!
+It would be really nice if we could just add these bonuses to our character's
+base stats like so:
 
-Anyways, the new `Character.resistance` property relies on two pieces of
-functionality not implemented in `EnumSet` yet:
-
-1. It iterates over the elements with a foreach
-2. It invokes the `+` operator between `EnumSet` instances
-
-We can support `foreach` over `EnumSet` elements by forwarding `opSlice` to the
-underlying store:
-
-```d
-auto opSlice() { return _store[]; }
+```
+auto totalStats = character.attributes + item.bonuses;
 ```
 
-Now lets implement `+` using `opBinary`:
+Yet again, D lets us implement this quite concisely, this time by leveraging
+[`opBinary`](https://dlang.org/spec/operatoroverloading.html#binary).
 
 ```d
-  auto opBinary(string op)(typeof(this) other) if (is(op == "+")) {
-    T[N] result = _store[] + other._store[];
+struct Enumap(K, V) {
+  //...
+  auto opBinary(string op)(typeof(this) other) {
+    V[N] result = mixin("_store[] " ~ op ~ " other._store[]");
     return typeof(this)(result);
   }
 ```
+
+Breakdown time again!
+
+```d
+auto opBinary(string op)(typeof(this) other)
+```
+
+An expression like `enumap1 + enumap2` will get translated (at compile
+time!) to `enumap1.opBinary!"+"(enumap2). The operator (in this case `+`) is
+passed as a compile time string argument. If passing the operator as a string
+sounds weird, read on ...
+
+```d
+V[N] result = mixin("_store[]" ~ op ~ "other._store[]");
+```
+
+`mixin` is a D keyword that translates a compile-time string into code.
+Continuing with our `+` example, we end up with 
+`V[N] result = mixin("_store[]" ~ "+" ~ "other._store[]")`, which simplifies to 
+`V[N] result = _store[] + other._store[])`
 
 The expression `_store[] + other._store[]` is called an "array-wise operation".
 It's a concise way of performing an operation between corresponding elements of
 two arrays -- in this case, adding each pair of integers into a resulting array.
 
-If you're new to D, the syntax for overloading the `+` operator probably seems
-strange; `opSum` or `opAdd` would be more obvious than `opBinary!"+"`.
+In many languages, we'd have to separately define `opAdd`, `opSub`, `opMult`,
+and more, most of which would likely contain similar code.
+Howerver, thanks to the way `opBinary` allows us to work with a string
+representation of the operator at compile time, our single `opBinary`
+implementation operators like `-` and `\*` as well.
 
-However, this syntax allows an awesome level of flexibility. As a matter of
-fact, lets leverage that to add support for the `-` operator:
+# Summary
 
-```d
-auto opBinary(string op)(typeof(this) other) {
-  V[N] result = mixin("_store[] " ~ op ~ " other._store[]");
-  return typeof(this)(result);
-}
-```
+I hope you enjoyed learning a little about D!
 
-`mixin` is a D keyword that translates a compile-time string into code.
-
-We use the concatenation operator `~` to form a compile-time string that places
-our operator ("+", "-", "/", ect.) between the two operands, which becomes the
-expression that is assigned to `result`.
-
-For example, subtracting two jk
-
-
-
-With `opSlice` and `opBinary` implemented, we can now calculate a character's
-total resistance. However, lets come back to that method.
-By leveraging `std.algorithm`, we can express our intent very concisely:
-
-```d
-import std.algorithm : map, reduce;
-struct Character {
-  // ...
-
-  @property auto resistance() {
-    return armor[]              // for each piece of armor
-      .map!(x => x.resistance)  // get its resistance value
-      .reduce!((a,b) => a + b); // and add them all together
-  }
-}
-```
-
+There is a full implementation of Enumap available 
+[here] (https://github.com/rcorre/enumap).
