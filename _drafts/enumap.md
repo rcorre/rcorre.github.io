@@ -37,8 +37,6 @@ struct Character {
 }
 ```
 
-So far, pretty typical -- this looks just like it would in C.
-
 However, it would be nicer if we could have each category
 (attributes, skills, resistances) represented as a single group of values.
 
@@ -99,15 +97,17 @@ If we accidentally gave an out of bounds index, the compiler wouldn't catch it
 and we'd get a runtime error.
 
 Ideally, we want the efficiency of the static array with the syntax of the
-associative array. Fortunately, the power of D allows us to achieve this with a
-few lines of code, and something even cooler with a few more. Let's call it an
-`Enumap`, as it maps enum members to values.
+associative array. Even better, it would be nice if we could say something like
+`attributes.charisma` instead of `attributes[Attribute.charisma]` like you would
+with a table in Lua. Fortunately, you can achieve this with only a few lines of
+D code.
 
 # The Enumap
 
 ```d
 import std.traits;
 
+/// Map each member of the enum `K` to a value of type `V`
 struct Enumap(K, V) {
     private enum N = EnumMembers!K.length;
     private V[N] _store;
@@ -155,7 +155,7 @@ of the indexing (`[]`) operator. The call `skills[Skill.stealth]` is translated
 to `sklls.opIndex(Skill.stealth)`, while the assignment `skills[Skill.stealth] =
 5` is translated to `sklls.opIndexAssign(Skill.stealth, 5)`.
 
-Lets use that in our character struct:
+Lets use that in our `Character` struct:
 
 ```d
 struct Character {
@@ -174,10 +174,7 @@ values can only be accessed using the enum members as keys.
 The underlying array `_store` is statically sized, so it requires no
 managed-memory allocation.
 
-Clever, yes?
-
-Wait, that wasn't the clever bit.
-**This** is the clever bit:
+Here's the really clever bit:
 
 ```d
 import std.conv;
@@ -194,9 +191,8 @@ struct Enumap(K, V) {
 if (hero.attributes.charisma < 5) hero.makeAwkwardJoke();
 ```
 
-This little bit of magic leverages
-[opDispatch](http://dlang.org/spec/operatoroverloading.html#dispatch) to
-overload the `.` operator and give us some really nice syntactic sugar.
+[opDispatch](http://dlang.org/spec/operatoroverloading.html#dispatch)
+essentially overloads the `.` operator to provide some nice syntactic sugar.
 
 Here's a quick rundown of what happens for `hero.attributes.charisma = 5`:
 
@@ -208,12 +204,12 @@ Here's a quick rundown of what happens for `hero.attributes.charisma = 5`:
 
 Remember how I mentioned that compile time arguments can be much more than
 types? Here, `s` is a compile-time string argument -- in this case, it's value
-is whatever symbol followed the `.`.
+is whatever symbol followed the `.`. Note that the above all happens at
+compile-time, and is equivalent to using the indexing operator.
 
 So, we get the string "charisma", but we what we actually want the enum member
-`Attribute.charisma`. `std.conv.to`, the swiss-army-knife of type conversions,
-makes quick work of this; it can, among other things, translate between strings
-and enum names.
+`Attribute.charisma`. `std.conv.to`, makes quick work of this; it can, among
+other things, translate between strings and enum names.
 
 # A step further: Enumap Arithmetic
 
@@ -290,3 +286,5 @@ I hope you enjoyed learning a little about D!
 
 There is a full implementation of Enumap available
 [here] (https://github.com/rcorre/enumap).
+
+\- Ryan Roden-Corrent

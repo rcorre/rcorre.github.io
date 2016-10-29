@@ -10,10 +10,12 @@ and some examples of what makes it useful. The example code is written in
 [D](http://dlang.org/), but it should be pretty easy to apply in any language.
 
 # Stacking States for Isolation
+
 Stacking states provides a nice way isolate chunks of game logic from
 one another. I leveraged this while making
-[damage-control](https://github.com/rcorre/damage-control), a game reminiscent
-of the SNES title Rampart.
+[damage_control](https://github.com/rcorre/damage_control), a game reminiscent
+of the Arcade/SNES title
+[Rampart](https://en.wikipedia.org/wiki/Rampart_(arcade_game)).
 
 In it, a match is divided into rounds, and each round passes through a series of
 phases. First you place some turrets in your territory, then you fire at your
@@ -126,17 +128,12 @@ struct StateStack(T) {
 
   void push(State!T[] states ...) {
     if (_entered) {
-      // we had a state that was previously entered()
-      // our first order of business is to exit()
       _stack.top.exit(_object);
-
-      // our new top state has no longer been entered(), so unset this flag
       _entered = false;
     }
 
-    // note that we push the new state, but do _not_ call enter() yet
-    // if multiple states are pushed at once, we only want to enter() the one
-    // that ends up getting run during the next pass.
+    // Note that we push the new states, but do _not_ call enter() yet
+    // If push is called again before run, we only want to enter the top state
     foreach_reverse(state ; states) {
       _stack.insertFront(state);
     }
@@ -198,8 +195,8 @@ to `run` so it can be used by `pop`.
 
 # Dissolving Complex Logic Flows
 
-In my previous game [Terra Arcana](https://github.com/rcorre/terra-arcana), the
-`StateStack` proved invaluable in making the flow of combat manageable.
+In [Terra Arcana](https://github.com/rcorre/terra-arcana), the
+`StateStack`, a turn-based strategy game I developed, the `StateStack` made the flow of combat manageable.
 
 Here's a quick description of the rules regarding attacks:
 
@@ -235,7 +232,7 @@ status effects, destroying a unit, and initiating a counter attack into its own
 independent state. When an attack begins, you push a whole bunch of these onto
 the stack at once, and then let everything play out.
 
-Here's an excerpt of code from that initiates an attack:
+Here's an excerpt of code that initiates an attack:
 
 ```d
 battle.states.popState();
@@ -281,3 +278,5 @@ Note that when `PerformCounter` becomes the active state, it replaces itself
 with 3 `ApplyEffects` and a `CheckUnitDestruction`. The states nicely
 encapsulate specific chunks of game logic, so we get to reuse the same states in
 `PerformAction` and `PerformCounter`.
+
+\- Ryan Roden-Corrent
