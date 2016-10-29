@@ -1,12 +1,9 @@
 # Modelling an RPG in D
-For the past year, I've done the majority of my personal coding in a language
-called [D](http://dlang.org/). 
 
-This post will explore some of the cool features of D in the context of creating
-an RPG.
+In this post, I'll show off some of the cool features of a language called
+[D](http://dlang.org/) in the context of creating a game, specifically an RPG.
 
 # Character Stats
-Pretty much any RPG worth its salt is going to have some form of 'stats'.
 
 For our RPG, lets say there are three categories of stats on every character:
 
@@ -18,25 +15,25 @@ In D, we could represent such a character like so:
 
 ```d
 struct Character {
-  // attributes
-  int strength;
-  int dexterity;
-  int constitution;
-  int intellect;
-  int wisdom;
-  int charisma;
+    // attributes
+    int strength;
+    int dexterity;
+    int constitution;
+    int intellect;
+    int wisdom;
+    int charisma;
 
-  // skills
-  int stealth;
-  int perception;
-  int diplomacy;
+    // skills
+    int stealth;
+    int perception;
+    int diplomacy;
 
-  // resistances
-  int resistPhysical;
-  int resistFire;
-  int resistWater;
-  int resistAir;
-  int resistEarth;
+    // resistances
+    int resistPhysical;
+    int resistFire;
+    int resistWater;
+    int resistAir;
+    int resistEarth;
 }
 ```
 
@@ -53,49 +50,52 @@ enum Skill { stealth, perception, diplomacy }
 enum Element { physical, fire, water, air, earth }
 ```
 
-Now we want to map each of these enum 
+Now we want to map each of these enum members to a value for that particular
+attribute, skill, or resistance.
+
 One option is an [Associative Array](http://dlang.org/spec/hash-map.html), which
 would look like this:
 
 ```d
 struct Character {
-  int[Attribute] attributes;
-  int[Skill] attributes;
-  int[Element] attributes;
+    int[Attribute] attributes;
+    int[Skill] attributes;
+    int[Element] attributes;
 }
+```
+
+`int[Attribute] attributes` declares that `Character.attributes` returns an
+`int` when indexed by an `Attribute`, like so:
+
+```d
+if (hero.attributes[Attribute.dexterity] < 4) hero.trip();
 ```
 
 However, associative arrays are heap allocated and don't have a default value
 for each key. It seems like overkill for storing a small bundle of values.
 
-Another option is a 
+Another option is a
 [static array](http://dlang.org/spec/arrays.html#static-arrays). Static arrays
 are stack allocated value types and will contain exactly the number of values
 that we need.
 
 ```d
 struct Character {
-  int[6] attributes;
-  int[3] skills;
-  int[5] resistances;
+    int[6] attributes;
+    int[3] skills;
+    int[5] resistances;
 }
 ```
 
 Our enum values are backed by `int`s, so we can use them directly as indexes
-like so:
+just as we did with the associative array:
 
 ```d
-if (hero.attributes[Attribute.dexterity] < 4) hero.tripOverOwnFeet();
+if (hero.attributes[Attribute.intellect] > 12) hero.pontificate();
 ```
 
 This is more efficient for our needs, but nothing enforces using enums as keys.
-The following is just as valid:
-
-```d
-if (hero.attributes[2] < 4) hero.tripOverOwnFeet();
-```
-
-If we acidentally gave an out of bounds index, the compiler wouldn't catch it
+If we accidentally gave an out of bounds index, the compiler wouldn't catch it
 and we'd get a runtime error.
 
 Ideally, we want the efficiency of the static array with the syntax of the
@@ -109,11 +109,11 @@ few lines of code, and something even cooler with a few more. Let's call it an
 import std.traits;
 
 struct Enumap(K, V) {
-  private enum N = EnumMembers!K.length;
-  private V[N] _store;
+    private enum N = EnumMembers!K.length;
+    private V[N] _store;
 
-  auto opIndex(K key)                { return _store[key]; }
-  auto opIndexAssign(T value, K key) { return _store[key] = value; }
+    auto opIndex(K key)                { return _store[key]; }
+    auto opIndexAssign(T value, K key) { return _store[key] = value; }
 }
 ```
 
@@ -159,9 +159,9 @@ Lets use that in our character struct:
 
 ```d
 struct Character {
-  Enumap!(Attribute, int) attributes;
-  Enumap!(Skill    , int) skills;
-  Enumap!(Element  , int) resistances;
+    Enumap!(Attribute, int) attributes;
+    Enumap!(Skill    , int) skills;
+    Enumap!(Element  , int) resistances;
 }
 ```
 
@@ -184,9 +184,9 @@ import std.conv;
 //...
 
 struct Enumap(K, V) {
-  //...
-  auto opDispatch(string s)()      { return this[s.to!K]; }
-  auto opDispatch(string s)(V val) { return this[s.to!K] = val; }
+    //...
+    auto opDispatch(string s)()      { return this[s.to!K]; }
+    auto opDispatch(string s)(V val) { return this[s.to!K] = val; }
 }
 ```
 
@@ -210,7 +210,7 @@ Remember how I mentioned that compile time arguments can be much more than
 types? Here, `s` is a compile-time string argument -- in this case, it's value
 is whatever symbol followed the `.`.
 
-So, we get the string "charisma", but we what we actually want the enum member 
+So, we get the string "charisma", but we what we actually want the enum member
 `Attribute.charisma`. `std.conv.to`, the swiss-army-knife of type conversions,
 makes quick work of this; it can, among other things, translate between strings
 and enum names.
@@ -238,11 +238,11 @@ Yet again, D lets us implement this quite concisely, this time by leveraging
 
 ```d
 struct Enumap(K, V) {
-  //...
-  auto opBinary(string op)(typeof(this) other) {
-    V[N] result = mixin("_store[] " ~ op ~ " other._store[]");
-    return typeof(this)(result);
-  }
+    //...
+    auto opBinary(string op)(typeof(this) other) {
+      V[N] result = mixin("_store[] " ~ op ~ " other._store[]");
+      return typeof(this)(result);
+    }
 ```
 
 Breakdown time again!
@@ -261,23 +261,32 @@ V[N] result = mixin("_store[]" ~ op ~ "other._store[]");
 ```
 
 `mixin` is a D keyword that translates a compile-time string into code.
-Continuing with our `+` example, we end up with 
-`V[N] result = mixin("_store[]" ~ "+" ~ "other._store[]")`, which simplifies to 
+Continuing with our `+` example, we end up with
+`V[N] result = mixin("_store[]" ~ "+" ~ "other._store[]")`, which simplifies to
 `V[N] result = _store[] + other._store[])`
 
 The expression `_store[] + other._store[]` is called an "array-wise operation".
 It's a concise way of performing an operation between corresponding elements of
 two arrays -- in this case, adding each pair of integers into a resulting array.
 
+```d
+return typeof(this)(result);
+```
+
+Here we wrap the resulting array in an `Enumap` before returning it.
+`typeof(this)` resolves to the enclosing type. It is equivalent, but preferable
+to `Enumap!(K, V)`, as if we change the name of the class we won't have to
+refactor this line.
+
 In many languages, we'd have to separately define `opAdd`, `opSub`, `opMult`,
 and more, most of which would likely contain similar code.
 Howerver, thanks to the way `opBinary` allows us to work with a string
 representation of the operator at compile time, our single `opBinary`
-implementation operators like `-` and `\*` as well.
+implementation supports operators like `-` and `\*` as well.
 
 # Summary
 
 I hope you enjoyed learning a little about D!
 
-There is a full implementation of Enumap available 
+There is a full implementation of Enumap available
 [here] (https://github.com/rcorre/enumap).

@@ -1,17 +1,15 @@
-## Intro
-My last two game projects were turn-based strategy games.
-While turn-based games can avoid many of the difficulties that plague real-time
-games (physics, networking, tighter performance constraints), they often involve
-quite complex game-logic flows. Trying to manage this with a smattering of
-state variables and conditionals can quickly become overwhelming.
+# Intro
 
-Thinking about the game flow in terms of a stack of states made organizing this
-logic manageable.
+Structuring the flow of logic in a game can be challenging.  If you're not
+careful, you quickly end up with a scattered collection of state variables and
+conditionals that is difficult to wrap your head around.
 
-If you find this kind of thing interesting, I highly recommend the book
-'Programming Game AI by Example', which inspired many of my ideas on this topic.
+In my past two game projects, I found it helpful to structure my game flow as a
+stack of states. In this article, I'll give a quick overview of this technique
+and some examples of what makes it useful. The example code is written in
+[D](http://dlang.org/), but it should be pretty easy to apply in any language.
 
-## The State
+# The State
 
 ```d
 interface State(T) {
@@ -27,20 +25,18 @@ each update loop of the game.
 `enter` is called whenever a state becomes active, before the first call to
 `run`. This allows the state to perform any preparation it needs before it
 begins its normal flow of logic.  Similarly, `exit` allows a state to perform
-some sort of tear-down before it becomes inactive.
+some sort of tear-down before it becomes inactive.  Note that `enter` and `exit`
+are _not_ equivalent to a constructor and destructor; we will see later that a
+single state may `enter` and `exit` multiple times during its life.
 
-Using the `TitleScreen` game state example from before,
-`TitleScreen.enter` might initiate a transition that slides the title menu into
-place, while `TitleScreen.exit` might trigger a fade-out.
+`T` is a generic type here, and represents whatever kind of object the states
+will operate on. For example, it might be a `Game` object that provides access
+to game entities, resources, input devices, and more.
 
-Note that `enter` and `exit` are _not_ equivalent to a constructor and
-destructor; we will see later that a single state may `enter` and `exit`
-multiple times during its life.
+# The Stack
 
-## The Stack
-The `StateStack` itself isn't really that ingenious either; as a matter of fact,
-its pretty much exactly what it sounds like, and only needs to support 3
-operations:
+The `StateStack` itself is pretty straightforward as well.
+It only needs to support 3 operations:
 
 - `push` : place a state on top of the stack.
 - `pop`  : remove the state on top of the stack.
@@ -55,15 +51,10 @@ a state transition:
 - `enter` and `exit` should be called an equal number of times during a state's
   life
 
-We could make `State` a class rather than an interface and stick a
-`bool isActive` member on it to track whether each state has been entered.
-
-However, since the `StateStack` only allows a single active state at once, we
-can actually track this with a single flag in the `StateStack`.
-Let's take a look at a stripped-down implementation:
+  
 
 ```d
-struct StateStack(T...) {
+struct StateStack(T) {
   private {
     bool        _entered;
     SList!State _stack;
@@ -142,7 +133,7 @@ While I find this much less useful, I decided to support it just to avoid nasty
 surprises. To support this, we need to cache the parameters that get passed in
 to `run` so it can be used by `pop`.
 
-## Dissolving Complex Logic Flows
+# Dissolving Complex Logic Flows
 
 In my previous game [Terra Arcana](https://github.com/rcorre/terra-arcana), the
 `StateStack` proved invaluable in making the flow of combat manageable.
@@ -229,7 +220,7 @@ with 3 `ApplyEffects` and a `CheckUnitDestruction`. The states nicely
 encapsulate specific chunks of game logic, so we get to reuse the same states in
 `PerformAction` and `PerformCounter`.
 
-## Isolation
+# Isolation
 Stacking states provides a nice way isolate chunks of game logic from
 one another. I leveraged this while making
 [damage-control](https://github.com/rcorre/damage-control), a game reminiscent
